@@ -1,4 +1,5 @@
 BasicGame.Game = function (game) {
+    var weapon = {};
 
     //  When a State is added to Phaser it automatically has the following properties set on it, even if they already exist:
 
@@ -43,6 +44,12 @@ BasicGame.Game = function (game) {
 
     this.hudZombieCounter = null;
 };
+//
+//BasicGame.Game.weapon = function() {
+//    this.gun = function() {
+//        //Phaser.Group.call(this, )
+//    }
+//};
 
 BasicGame.Game.prototype.preload = function () {
 
@@ -89,7 +96,7 @@ BasicGame.Game.prototype.create = function () {
 
 //game.physics.arcade.modeToObject(Zomibie,Player);  sorgt dafür, das sich der this.zombie dem spieler nähert
 BasicGame.Game.prototype.render = function () {
-    game.debug.bodyInfo(this.player, 30, 30);
+    //game.debug.bodyInfo(this.player, 30, 30);
 };
 
 BasicGame.Game.prototype.update = function () {
@@ -169,7 +176,15 @@ BasicGame.Game.prototype.playerHit = function(player, enemy) {
         player.body.velocity.x = -800;
 
         if(this.playerHealth <= 0) {
+            var killedPlayer = this.add.sprite(player.x, player.y, 'player');
             player.kill();
+            killedPlayer.anchor.setTo(0.5, 0.5);
+            killedPlayer.animations.add('die', [
+                "dying_1.png",
+                "dying_2.png",
+                "dying_2.png"
+            ], 10);
+            killedPlayer.play('die', 15);
         }
     }
 };
@@ -288,8 +303,6 @@ BasicGame.Game.prototype.fire = function () {
     bullet.body.velocity.x = (this.playerTurned ? -1 : 1) * 500;
     bullet.anchor.setTo(0.5, 0.5);
     bullet.scale.setTo(4, 4);
-
-
 };
 
 BasicGame.Game.prototype.displayHUD = function () {
@@ -304,7 +317,6 @@ BasicGame.Game.prototype.displayHUD = function () {
     this.hudHealthText.fixedToCamera = true;
 
     this.hud.add(this.hudZombieCounter);
-
 };
 
 BasicGame.Game.prototype.updateHUD = function () {

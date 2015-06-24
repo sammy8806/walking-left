@@ -1,0 +1,75 @@
+{"frames": {
+
+"box.png":
+{
+	"frame": {"x":2,"y":2,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":50,"h":50},
+	"sourceSize": {"w":50,"h":50},
+	"pivot": {"x":0.5,"y":0.5}
+},
+"sword.png":
+{
+	"frame": {"x":54,"y":2,"w":5,"h":26},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":5,"h":26},
+	"sourceSize": {"w":5,"h":26},
+	"pivot": {"x":0.5,"y":0.5}
+},
+"barrel.png":
+{
+	"frame": {"x":61,"y":2,"w":23,"h":26},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":23,"h":26},
+	"sourceSize": {"w":23,"h":26},
+	"pivot": {"x":0.5,"y":0.5}
+},
+"medkit.png":
+{
+	"frame": {"x":86,"y":2,"w":18,"h":12},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":18,"h":12},
+	"sourceSize": {"w":18,"h":12},
+	"pivot": {"x":0.5,"y":0.5}
+},
+"gun_icon.png":
+{
+	"frame": {"x":106,"y":2,"w":16,"h":10},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":16,"h":10},
+	"sourceSize": {"w":16,"h":10},
+	"pivot": {"x":0.5,"y":0.5}
+},
+"gun.png":
+{
+	"frame": {"x":2,"y":54,"w":9,"h":6},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":9,"h":6},
+	"sourceSize": {"w":9,"h":6},
+	"pivot": {"x":0.5,"y":0.5}
+},
+"projectile.png":
+{
+	"frame": {"x":13,"y":54,"w":2,"h":1},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":2,"h":1},
+	"sourceSize": {"w":2,"h":1},
+	"pivot": {"x":0.5,"y":0.5}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "objects.png",
+	"format": "RGBA8888",
+	"size": {"w":124,"h":62},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:5cb7fd8e17389b5a1fad3cc46de6dc50:9f3833fdef7c4ecc9f98ec774571b75e:8d6d12ff4d5234f2a4b19e0a906dbf52$"
+}
+}
