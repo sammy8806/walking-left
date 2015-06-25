@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Walking-Left</title>
+    <script src="assets/js/phaser.js"></script>
+
+    <script src="assets/js/boot.js"></script>
+    <script src="assets/js/preload.js"></script>
+    <script src="assets/js/intro.js"></script>
+    <script src="assets/js/menu.js"></script>
+    <script src="assets/js/fullGame.js"></script>
+
+    <script type="text/javascript">
+
+        var game = new Phaser.Game(800, 600, Phaser.AUTO);
+
+        game.state.add("Boot", Boot);
+        game.state.add("Preload", Preload);
+        game.state.add("Intro", Intro);
+        game.state.add("Menu", Menu);
+        game.state.add("MyGame", MyGame);
+
+        game.state.start("Boot");
+
+    </script>
+
+</head>
+<body>
+<div id="walking-left">
+
+</div>
+</body>
+</html>
