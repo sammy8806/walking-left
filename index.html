@@ -9,17 +9,17 @@
     <script src="assets/js/preload.js"></script>
     <script src="assets/js/intro.js"></script>
     <script src="assets/js/menu.js"></script>
-    <script src="assets/js/fullGame.js"></script>
+    <script src="assets/js/walkingleftgame.js"></script>
 
     <script type="text/javascript">
 
-        var game = new Phaser.Game(800, 600, Phaser.AUTO);
+        var game = new Phaser.Game(800, 600, Phaser.AUTO, 'walking-left');
 
         game.state.add("Boot", Boot);
         game.state.add("Preload", Preload);
         game.state.add("Intro", Intro);
         game.state.add("Menu", Menu);
-        game.state.add("MyGame", MyGame);
+        game.state.add("MyGame", WalkingLeftGame);
 
         game.state.start("Boot");
 
