@@ -2,6 +2,8 @@ var Preload = function(game) {
     this.game = game;
 };
 
+var worldBounds = {x:0, y:0, width: 20*800, height: 600};
+
 Preload.prototype.preload = function() {
 
     this.text = game.add.text(16, 16, 'loading 0%');
