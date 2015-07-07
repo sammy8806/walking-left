@@ -1,17 +1,14 @@
-var line1;
-var line2;
-
-var Menu = function(game) {
-    this.game = game;
+BasicGame.MainMenu = function (game) {
+    this.music = null;
+    this.playButton = null;
 };
 
-Menu.prototype.preload = function() {
+BasicGame.MainMenu.prototype.preload = function() {
 };
 
-Menu.prototype.create = function() {
+BasicGame.MainMenu.prototype.create = function() {
 
     this.ground = this.createGround();
-    this.doll = this.createDoll();
 
     this.ground.alpha = 0;
     var tw1 = game.add.tween(this.ground);
@@ -37,7 +34,7 @@ Menu.prototype.create = function() {
 
 };
 
-Menu.prototype.createText = function(text, x, y, size) {
+BasicGame.MainMenu.prototype.createText = function(text, x, y, size) {
 
     var txt = this.game.add.text(x, y, text);
     txt.anchor.set(0.5);
@@ -52,24 +49,20 @@ Menu.prototype.createText = function(text, x, y, size) {
 
 };
 
-Menu.prototype.update = function() {
+BasicGame.MainMenu.prototype.update = function() {
 
     this.updateBeacon();
 
 };
 
-Menu.prototype.updateBeacon = function() {
-
+BasicGame.MainMenu.prototype.updateBeacon = function() {
     var ct = game.time.now - this.gameStartTime;
-
 };
 
-Menu.prototype.render = function() {
+BasicGame.MainMenu.prototype.render = function() {
 };
 
-Menu.prototype.createGround = Intro.prototype.createGround;
-
-Menu.prototype.createSpriteRect = function(x,y,w,h,color) {
+BasicGame.MainMenu.prototype.createSpriteRect = function(x,y,w,h,color) {
 
     var bodySprite = game.add.sprite(x,y);
     var g = game.add.graphics(0,0);
@@ -79,16 +72,18 @@ Menu.prototype.createSpriteRect = function(x,y,w,h,color) {
     bodySprite.addChild(g);
 
     return bodySprite;
-
 };
 
+BasicGame.MainMenu.prototype.createGround = function () {
 
-Menu.prototype.createDoll = function() {
+    ground = game.add.group();
+    ground.enableBody = true;
 
+    for (var i = 0; i < Math.ceil(game.world.width / 50); i++) {
+        g = ground.create(i * 50, game.world.height - 50, 'ground');
+        g.body.immovable = true;
+    }
 
+    return ground;
 
 };
-
-
-
-

@@ -1,10 +1,12 @@
-var Preload = function(game) {
-    this.game = game;
+BasicGame.Preloader = function (game) {
+    this.background = null;
+    this.preloadBar = null;
+    this.ready = false;
 };
 
 var worldBounds = {x:0, y:0, width: 20*800, height: 600};
 
-Preload.prototype.preload = function() {
+BasicGame.Preloader.prototype.preload = function() {
 
     this.text = game.add.text(16, 16, 'loading 0%');
     this.text.anchor.set(0);
@@ -28,8 +30,18 @@ Preload.prototype.preload = function() {
     game.load.onFileComplete.add(fileComplete, this);
 
     game.load.atlasJSONHash('player', 'assets/img/player.png', 'assets/img/player.json');
+    game.load.atlasJSONHash('zombie', 'assets/img/zombie.png', 'assets/img/zombie.json');
+
     game.load.image('ground', 'assets/img/street.png');
     game.load.image('sky', 'assets/img/sky.png');
+    game.load.image('box', 'assets/img/box.png');
+
+    game.load.image('barrel', 'assets/sprites/objects/barrel.png');
+    game.load.image('gun', 'assets/sprites/objects/gun.png');
+    game.load.image('gun_icon', 'assets/sprites/objects/gun_icon.png');
+    game.load.image('medkit', 'assets/sprites/objects/medkit.png');
+    game.load.image('projectile', 'assets/sprites/objects/projectile.png');
+    game.load.image('sword', 'assets/sprites/objects/sword.png');
 
     //game.load.audio('drums', 'assets/drums2.mp3');
     //game.load.audio('kick', 'assets/kick.wav');
@@ -46,11 +58,23 @@ function fileComplete() {
     this.text.setText("loading "+game.load.progress+"%");
 }
 
-Preload.prototype.create = function() {
-    console.log('Starting Intro');
-    game.state.start("Intro");
+BasicGame.Preloader.prototype.create = function() {
+    //	Once the load has finished we disable the crop because we're going to sit in the update loop for a short while as the music decodes
+    this.preloadBar.cropEnabled = false;
+
+    console.log('Starting Menu');
+    game.state.start("Menu");
+
+    //console.log('Starting MyGame');
+    //game.state.start("MyGame");
 };
 
-Preload.prototype.update = function() {
+BasicGame.Preloader.prototype.update = function() {
     console.log(game.load.progress);
+
+    //if (this.cache.isSoundDecoded('titleMusic') && this.ready == false)
+    //{
+    //    this.ready = true;
+    //    this.state.start('MainMenu');
+    //}
 };

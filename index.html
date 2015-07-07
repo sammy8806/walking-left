@@ -15,11 +15,10 @@
 
         var game = new Phaser.Game(800, 600, Phaser.AUTO, 'walking-left');
 
-        game.state.add("Boot", Boot);
-        game.state.add("Preload", Preload);
-        game.state.add("Intro", Intro);
-        game.state.add("Menu", Menu);
-        game.state.add("MyGame", WalkingLeftGame);
+        game.state.add("Boot", BasicGame.Boot);
+        game.state.add("Preload", BasicGame.Preloader);
+        game.state.add("Menu", BasicGame.MainMenu);
+        game.state.add("MyGame", BasicGame.Game);
 
         game.state.start("Boot");
 
