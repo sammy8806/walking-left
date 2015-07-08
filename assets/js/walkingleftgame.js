@@ -530,7 +530,7 @@ BasicGame.Game.prototype.playerCanFire = function () {
 };
 
 BasicGame.Game.prototype.fire = function () {
-    if (this.playerCanFire()) {
+    if (!this.playerCanFire()) {
         return;
     }
 
