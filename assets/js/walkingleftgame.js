@@ -413,22 +413,21 @@ BasicGame.Game.prototype.fire = function () {
 
 BasicGame.Game.prototype.displayHUD = function () {
     this.hud = this.add.group();
+    this.hud.fixedToCamera = true;
 
     this.hudZombieCounter = this.add.text(660, 500, '', {font: '16px monospace', fill: '#fff'});
-    this.hudZombieCounter.fixedToCamera = true;
     this.hudBulletCounter = this.add.text(660, 520, '', {font: '16px monospace', fill: '#fff'});
-    this.hudBulletCounter.fixedToCamera = true;
-
     this.hudHealthText = this.add.text(660, 540, '', {font: '16px monospace', fill: '#fff'});
-    this.hudHealthText.fixedToCamera = true;
-
     this.hudLevel = this.add.text(660, 480, '', {font: '16px monospace', fill: '#fff'});
-    this.hudLevel.fixedToCamera = true;
-
     this.hudFpsCounter = this.add.text(20, 20, '', {font: '16px monospace', fill: '#fff'});
-    this.hudFpsCounter.fixedToCamera = true;
+    var keyText = this.add.text(20, 40, '[R]\tReload\n[Space]\tJump\n', {font: '16px monospace', fill: '#fff'});
 
     this.hud.add(this.hudZombieCounter);
+    this.hud.add(this.hudBulletCounter);
+    this.hud.add(this.hudHealthText);
+    this.hud.add(this.hudLevel);
+    this.hud.add(this.hudFpsCounter);
+    this.hud.add(keyText);
 };
 
 BasicGame.Game.prototype.updateHUD = function () {

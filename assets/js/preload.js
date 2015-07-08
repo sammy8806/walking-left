@@ -34,8 +34,8 @@ BasicGame.Preloader.prototype.preload = function() {
 
     game.load.image('ground', 'assets/img/street.png');
     game.load.image('sky', 'assets/img/sky.png');
-    game.load.image('box', 'assets/img/box.png');
 
+    game.load.image('box', 'assets/sprites/objects/box.png');
     game.load.image('barrel', 'assets/sprites/objects/barrel.png');
     game.load.image('gun', 'assets/sprites/objects/gun.png');
     game.load.image('gun_icon', 'assets/sprites/objects/gun_icon.png');
