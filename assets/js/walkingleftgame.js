@@ -47,10 +47,12 @@ BasicGame.Game = function (game) {
     this.medkits = null;
 
     this.hudZombieCounter = null;
+    this.hudHealthbar = null;
 
     this.gun = null;
 
     this.isEnded = false;
+    this.bgmusic = null;
 };
 
 //
@@ -65,6 +67,9 @@ BasicGame.Game.prototype.preload = function () {
 };
 
 BasicGame.Game.prototype.create = function () {
+    this.bgmusic = game.add.audio('bg');
+    this.bgmusic.play();
+
     this.time.advancedTiming = true;
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -152,6 +157,7 @@ BasicGame.Game.prototype.update = function () {
     //  Allow the player to jump if they are touching the ground.
     if (this.cursors.up.isDown && this.player.body.touching.down) {
         this.player.body.velocity.y = -playerBaseJumpVelocity;
+        this.playAudio('jump');
     }
 
     this.physics.arcade.overlap(
@@ -175,6 +181,10 @@ BasicGame.Game.prototype.update = function () {
 
     if (this.input.keyboard.isDown(Phaser.Keyboard.L)) {
         this.level++;
+    }
+
+    if (this.input.keyboard.isDown(Phaser.Keyboard.R)) {
+        this.bullets = 15;
     }
 
     if (this.input.keyboard.isDown(Phaser.Keyboard.R)) {
@@ -206,11 +216,13 @@ BasicGame.Game.prototype.update = function () {
     }
 
     if (this.player.x > this.level * 1200) {
+        this.playAudio('levelUp');
         this.level++;
     }
 
     if (this.level > 100) {
         this.showMessage("Congratz for clearing the Game ;-)", 10);
+        this.playAudio('gameWon');
         this.isEnded = true;
     }
 
@@ -224,6 +236,7 @@ BasicGame.Game.prototype.quitGame = function () {
 BasicGame.Game.prototype.playerHealthkit = function (player, healthkit) {
     this.playerHealth += 40;
     healthkit.kill();
+    this.playAudio('pickup');
 };
 
 BasicGame.Game.prototype.playerHit = function (player, enemy) {
@@ -234,6 +247,9 @@ BasicGame.Game.prototype.playerHit = function (player, enemy) {
         if (this.playerHealth <= 0) {
             var killedPlayer = this.add.sprite(player.x, player.y, 'player');
             player.kill();
+            this.bgmusic.stop();
+
+            game.add.audio('gameLost').play();
 
             this.showMessage("Congratz for NOT clearing the Game :(", 10);
 
@@ -243,6 +259,10 @@ BasicGame.Game.prototype.playerHit = function (player, enemy) {
                 "dying_2.png"
             ], 2);
             killedPlayer.play('die', 2);
+
+            this.isEnded = true;
+        } else {
+            this.playAudio('playerHit');
         }
     }
 };
@@ -328,7 +348,7 @@ BasicGame.Game.prototype.spawnZombie = function () {
         return;
 
     zombie.reset(
-        this.rnd.integerInRange(this.player.x + 20, this.player.x + 600),
+        this.rnd.integerInRange(this.player.x + 50, this.player.x + 700),
         0
     );
     zombie.play('run_left');
@@ -336,7 +356,6 @@ BasicGame.Game.prototype.spawnZombie = function () {
     zombie.body.gravity.y = 600;
     zombie.body.velocity.x = this.level * -3 + -15;
 };
-
 
 BasicGame.Game.prototype.loadHealthkits = function () {
     this.medkits = this.add.group();
@@ -416,12 +435,22 @@ BasicGame.Game.prototype.displayHUD = function () {
     this.hud.fixedToCamera = true;
 
     this.hudZombieCounter = this.add.text(660, 500, '', {font: '16px monospace', fill: '#fff'});
-    this.hudBulletCounter = this.add.text(660, 520, '', {font: '16px monospace', fill: '#fff'});
-    this.hudHealthText = this.add.text(660, 540, '', {font: '16px monospace', fill: '#fff'});
+    this.hudBulletCounter = this.add.text(30, 52, '', {font: '20px monospace', fill: '#fff'});
+    this.hudHealthText = this.add.text(30, 30, '', {font: '20px monospace', fill: '#fff'});
     this.hudLevel = this.add.text(660, 480, '', {font: '16px monospace', fill: '#fff'});
-    this.hudFpsCounter = this.add.text(20, 20, '', {font: '16px monospace', fill: '#fff'});
-    var keyText = this.add.text(20, 40, '[R]\tReload\n[Space]\tJump\n', {font: '16px monospace', fill: '#fff'});
+    this.hudFpsCounter = this.add.text(this.camera.width - 80, 20, '', {
+        font: '16px monospace',
+        fill: '#fff',
+        align: 'right'
+    });
+    var keyText = this.add.text(this.camera.width - 120, 40, 'Reload\t[R]\nJump\t[Space]', {
+        font: '16px monospace',
+        fill: '#fff',
+        align: 'right'
+    });
 
+    this.hudHealthbar = this.add.group();
+    this.hud.add(this.hudHealthbar);
     this.hud.add(this.hudZombieCounter);
     this.hud.add(this.hudBulletCounter);
     this.hud.add(this.hudHealthText);
@@ -437,6 +466,19 @@ BasicGame.Game.prototype.updateHUD = function () {
     this.hudLevel.text = 'Level: ' + this.level;
 
     this.hudFpsCounter.text = "FPS: " + this.game.time.fps;
+
+    //this.hudHealthbar = this.add.group();
+    //for (var i = 0; i <= 100; i++) {
+    //    var g = game.add.graphics(25, 7);
+    //    g.beginFill(0xff0000);
+    //    g.drawRect(i, 0, 1.5, 22);
+    //    g.endFill();
+    //    this.hudHealthbar.addChild(g);
+    //}
+    //
+    //this.hudHealthbar.create(0, 0, 'healthbar');
+    //this.hudHealthbarContent = game.add.group();
+    //this.hudHealthbar.add(this.hudHealthbarContent);
 };
 
 BasicGame.Game.prototype.showMessage = function (message, expire) {
@@ -448,5 +490,12 @@ BasicGame.Game.prototype.showMessage = function (message, expire) {
         {font: '20px monospace', fill: '#fff', align: 'center'}
     );
     this.message.anchor.setTo(0.5, 0.5);
+    this.message.fixedToCamera = true;
     this.messageExpire = this.time.now + expire * 1000;
+};
+
+BasicGame.Game.prototype.playAudio = function (name) {
+    var audio = game.add.audio(name);
+    audio.play();
+    return audio;
 };

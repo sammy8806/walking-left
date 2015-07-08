@@ -1,18 +1,18 @@
 BasicGame.MainMenu = function (game) {
-    this.music = null;
+    this.bgmusic = null;
     this.playButton = null;
 };
 
-BasicGame.MainMenu.prototype.preload = function() {
+BasicGame.MainMenu.prototype.preload = function () {
 };
 
-BasicGame.MainMenu.prototype.create = function() {
+BasicGame.MainMenu.prototype.create = function () {
 
     this.ground = this.createGround();
 
     this.ground.alpha = 0;
     var tw1 = game.add.tween(this.ground);
-    tw1.to({ alpha: 1.0 }, 1000, "Linear", true);
+    tw1.to({alpha: 1.0}, 1000, "Linear", true);
 
     var t = game.add.text(250, 150, 'The Walking XXX');
     t.anchor.set(0);
@@ -22,10 +22,15 @@ BasicGame.MainMenu.prototype.create = function() {
     t.fill = '#ffffff';
     t.alpha = 0.5;
 
+    var anyKey = this.createText('Press any key to continue', 250, 500, 30);
+    var tw2 = game.add.tween(anyKey);
+
+    tw2.to({alpha: 0.0}, 500, "Linear", true, 700, -1, true);
+
     this.gameStartTime = game.time.now;
 
-    game.time.events.add(750, function() {
-        game.input.keyboard.addCallbacks(this, null, function() {
+    game.time.events.add(300, function () {
+        game.input.keyboard.addCallbacks(this, null, function () {
             game.input.keyboard.addCallbacks(this, null, null, null);
             console.log('Starting MyGame');
             this.game.state.start("MyGame");
@@ -34,7 +39,7 @@ BasicGame.MainMenu.prototype.create = function() {
 
 };
 
-BasicGame.MainMenu.prototype.createText = function(text, x, y, size) {
+BasicGame.MainMenu.prototype.createText = function (text, x, y, size) {
 
     var txt = this.game.add.text(x, y, text);
     txt.anchor.set(0.5);
@@ -49,29 +54,15 @@ BasicGame.MainMenu.prototype.createText = function(text, x, y, size) {
 
 };
 
-BasicGame.MainMenu.prototype.update = function() {
-
+BasicGame.MainMenu.prototype.update = function () {
     this.updateBeacon();
-
 };
 
-BasicGame.MainMenu.prototype.updateBeacon = function() {
+BasicGame.MainMenu.prototype.updateBeacon = function () {
     var ct = game.time.now - this.gameStartTime;
 };
 
-BasicGame.MainMenu.prototype.render = function() {
-};
-
-BasicGame.MainMenu.prototype.createSpriteRect = function(x,y,w,h,color) {
-
-    var bodySprite = game.add.sprite(x,y);
-    var g = game.add.graphics(0,0);
-    g.beginFill(color);
-    g.drawRect(-w*0.5, -h*0.5, w, h);
-    g.endFill();
-    bodySprite.addChild(g);
-
-    return bodySprite;
+BasicGame.MainMenu.prototype.render = function () {
 };
 
 BasicGame.MainMenu.prototype.createGround = function () {

@@ -42,6 +42,7 @@ BasicGame.Preloader.prototype.preload = function() {
     game.load.image('medkit', 'assets/sprites/objects/medkit.png');
     game.load.image('projectile', 'assets/sprites/objects/projectile.png');
     game.load.image('sword', 'assets/sprites/objects/sword.png');
+    game.load.image('healthbar', 'assets/sprites/objects/healthbar.png');
 
     //game.load.audio('drums', 'assets/drums2.mp3');
     //game.load.audio('kick', 'assets/kick.wav');
@@ -50,6 +51,13 @@ BasicGame.Preloader.prototype.preload = function() {
     //game.load.audio('crash', 'assets/crash2.wav');
     //game.load.audio('bgmusic', ['assets/wind2.mp3']);
 
+    game.load.audio('playerHit', 'assets/sounds/Hit_Hurt30.wav');
+    game.load.audio('jump', 'assets/sounds/Jump8.wav');
+    game.load.audio('pickup', 'assets/sounds/Pickup_Coin6.wav');
+    game.load.audio('levelUp', 'assets/sounds/Powerup8.wav');
+    game.load.audio('gameLost', 'assets/sounds/Randomize113.wav');
+    game.load.audio('bg', ['assets/sounds/bodenstaendig_2000_in_rock_4bit.ogg']);
+    //game.load.audio('', 'assets/sounds/');
 };
 
 function fileComplete() {
