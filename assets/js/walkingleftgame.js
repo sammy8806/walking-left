@@ -34,7 +34,7 @@ BasicGame.Game = function (game) {
     this.healthkitDelay = 12000; // in msec
     this.heathkitPossibility = 10; // in percent
 
-    this.ammukitDelay = 12000; // in msec
+    this.ammukitDelay = 8000; // in msec
     this.ammukitPossibility = 20; // in percent
 
     // Internals
@@ -74,10 +74,15 @@ BasicGame.Game.prototype.preload = function () {
 
 };
 
+BasicGame.Game.prototype.playBackgroundMusic = function() {
+    this.bgmusic.play('', 0, 1, true);
+};
+
 BasicGame.Game.prototype.create = function () {
     this.bgmusic = game.add.audio('bg');
     this.bgmusic.volume = 0.8;
-    this.bgmusic.play();
+    this.bgmusic.onLoop.add(this.playBackgroundMusic, this);
+    this.playBackgroundMusic();
 
     this.time.advancedTiming = true;
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
