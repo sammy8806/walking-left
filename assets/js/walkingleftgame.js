@@ -497,7 +497,7 @@ BasicGame.Game.prototype.displayHUD = function () {
     this.hudHealthText = this.add.text(30, 30, '', {font: '20px monospace', fill: '#fff'});
     this.hudLevel = this.add.text(660, 480, '', {font: '16px monospace', fill: '#fff'});
 
-    var keyText = this.add.text(this.camera.width - 120, 40, 'Jump\t[Space]', {
+    var keyText = this.add.text(this.camera.width - 120, 40, 'Shoot\t[Space]', {
         font: '16px monospace',
         fill: '#fff',
         align: 'right'
