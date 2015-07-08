@@ -4,7 +4,7 @@ BasicGame.Preloader = function (game) {
     this.ready = false;
 };
 
-var worldBounds = {x:0, y:0, width: 20*800, height: 600};
+var worldBounds = {x:0, y:0, width: 102*1600, height: 600};
 
 BasicGame.Preloader.prototype.preload = function() {
 
