@@ -28,14 +28,14 @@ BasicGame.Game = function (game) {
     this.playerBullets = 30;
     this.playerHealth = 100;
 
-    this.bulletFireRate = 60 * 2; // shots per 60 seconds
+    this.bulletFireRateBase = 60 * 2; // shots per 60 seconds
 
     // Internals
     this.nextShotAt = 0;
-    this.bullets = 3;
+    this.bullets = 0;
 
-    this.instructions = null;
-    this.instructionsExpire = null;
+    this.message = null;
+    this.messageExpire = null;
     this.playerTurned = false;
 
     this.nextZombieAt = 0;
@@ -49,6 +49,8 @@ BasicGame.Game = function (game) {
     this.hudZombieCounter = null;
 
     this.gun = null;
+
+    this.isEnded = false;
 };
 
 //
@@ -97,14 +99,13 @@ BasicGame.Game.prototype.create = function () {
     this.bulletPool.setAll('outOfBoundsKill', true);
     this.bulletPool.setAll('checkWorldBounds', true);
 
-    // game.physics.arcade.moveToObject(zombie, player);
-
     this.game.camera.follow(this.player);
     this.game.camera.deadzone = new Phaser.Rectangle(150, 150, 500, 300);
     this.game.camera.focusOnXY(0, 0);
 
     this.displayHUD();
-    this.displayEntryMessage();
+
+    this.showMessage('Use Arrow Keys to Move, Press Z to Fire\nTapping/clicking does both', 3);
 };
 
 //game.physics.arcade.modeToObject(Zomibie,Player);  sorgt dafür, das sich der this.zombie dem spieler nähert
@@ -113,6 +114,9 @@ BasicGame.Game.prototype.render = function () {
 };
 
 BasicGame.Game.prototype.update = function () {
+    if (this.isEnded)
+        return;
+
     this.game.physics.arcade.collide(this.medkits, this.boxes);
     this.game.physics.arcade.collide(this.medkits, this.platforms);
 
@@ -161,10 +165,6 @@ BasicGame.Game.prototype.update = function () {
         this.player, this.medkits, this.playerHealthkit, null, this
     );
 
-    if (this.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
-        this.fire();
-    }
-
     if (this.input.keyboard.isDown(Phaser.Keyboard.Z)) {
         this.spawnZombie();
     }
@@ -177,8 +177,16 @@ BasicGame.Game.prototype.update = function () {
         this.level++;
     }
 
-    if (this.instructions.exists && this.time.now > this.instructionsExpire) {
-        this.instructions.destroy();
+    if (this.input.keyboard.isDown(Phaser.Keyboard.R)) {
+        this.bullets = 15;
+    }
+
+    if (this.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
+        this.fire();
+    }
+
+    if (this.message.exists && this.time.now > this.messageExpire) {
+        this.message.destroy();
     }
 
     if (this.nextZombieAt < this.time.now && this.zombies.countDead() > 0) {
@@ -195,6 +203,15 @@ BasicGame.Game.prototype.update = function () {
         } else {
             console.log('no hk (' + this.heathkitPossibility + ' ; ' + rnd + ')');
         }
+    }
+
+    if (this.player.x > this.level * 1200) {
+        this.level++;
+    }
+
+    if (this.level > 100) {
+        this.showMessage("Congratz for clearing the Game ;-)", 10);
+        this.isEnded = true;
     }
 
     this.updateHUD();
@@ -217,6 +234,9 @@ BasicGame.Game.prototype.playerHit = function (player, enemy) {
         if (this.playerHealth <= 0) {
             var killedPlayer = this.add.sprite(player.x, player.y, 'player');
             player.kill();
+
+            this.showMessage("Congratz for NOT clearing the Game :(", 10);
+
             killedPlayer.anchor.setTo(0.5, 0.5);
             killedPlayer.animations.add('die', [
                 "dying_1.png",
@@ -233,8 +253,9 @@ BasicGame.Game.prototype.zombieHitWithGun = function (bullet, enemy) {
 };
 
 BasicGame.Game.prototype.loadPlayer = function () {
-    //return this.loadPlayerAt(32, game.world.height - 150);
+    // return this.loadPlayerAt(32, game.world.height - 150);
     return this.loadPlayerWithGunAt(32, game.world.height - 150);
+    // return this.player = new BasicGame.Player(game.world.centerX, game.world.centerY, this.game);
 };
 
 BasicGame.Game.prototype.loadPlayerAt = function (x, y) {
@@ -381,7 +402,7 @@ BasicGame.Game.prototype.fire = function () {
     else
         return;
 
-    this.nextShotAt = this.time.now + (1000 * 60 / this.bulletFireRate);
+    this.nextShotAt = this.time.now + (1000 * 60 / ( this.bulletFireRateBase * ( this.level * 0.4)));
 
     var bullet = this.bulletPool.getFirstExists(false);
     bullet.reset(this.player.x + (this.playerTurned ? -1 : 1) * 15, this.player.y);
@@ -419,12 +440,14 @@ BasicGame.Game.prototype.updateHUD = function () {
     this.hudFpsCounter.text = "FPS: " + this.game.time.fps;
 };
 
-BasicGame.Game.prototype.displayEntryMessage = function () {
-    this.instructions = this.add.text(400, 500,
-        'Use Arrow Keys to Move, Press Z to Fire\n' +
-        'Tapping/clicking does both',
+BasicGame.Game.prototype.showMessage = function (message, expire) {
+    if (message == undefined) {
+        expire = 1000;
+    }
+    this.message = this.add.text(400, 500,
+        message,
         {font: '20px monospace', fill: '#fff', align: 'center'}
     );
-    this.instructions.anchor.setTo(0.5, 0.5);
-    this.instructionsExpire = this.time.now + 1000;
+    this.message.anchor.setTo(0.5, 0.5);
+    this.messageExpire = this.time.now + expire * 1000;
 };
