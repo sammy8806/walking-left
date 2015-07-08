@@ -31,6 +31,12 @@ BasicGame.Game = function (game) {
     this.bulletFireRateBase = 60 * 2; // shots per 60 seconds
     this.debugMode = false;
 
+    this.healthkitDelay = 12000; // in msec
+    this.heathkitPossibility = 10; // in percent
+
+    this.ammukitDelay = 12000; // in msec
+    this.ammukitPossibility = 20; // in percent
+
     // Internals
     this.nextShotAt = 0;
     this.bullets = 0;
@@ -43,13 +49,9 @@ BasicGame.Game = function (game) {
     this.zombieDelay = 3000; // in msec
 
     this.nextHealthkitAt = 0;
-    this.healthkitDelay = 6000; // in msec
-    this.heathkitPossibility = 20; // in percent
     this.medkits = null;
 
     this.nextAmmukitAt = 0;
-    this.ammukitDelay = 6000; // in msec
-    this.ammukitPossibility = 40; // in percent
     this.ammukits = null;
 
     this.hudZombieCounter = null;
@@ -168,6 +170,10 @@ BasicGame.Game.prototype.update = function () {
         this.player.animations.stop();
     }
 
+    this.zombies.forEach(function(zombie) {
+        zombie.animations.play('run_left');
+    });
+
     //  Allow the player to jump if they are touching the ground.
     if (this.cursors.up.isDown && this.player.body.touching.down) {
         this.player.body.velocity.y = -playerBaseJumpVelocity;
@@ -224,9 +230,9 @@ BasicGame.Game.prototype.update = function () {
         var rnd = Math.random();
         if (this.heathkitPossibility / 100 >= rnd) {
             var medkit = this.spawnHealthkit();
-            console.log('hk (' + this.heathkitPossibility + ' ; ' + rnd + ') at (' + medkit.x + ',' + medkit.y + ')');
+            console.log('hk (' + this.heathkitPossibility + '% ; ' + rnd + ') at (' + medkit.x + ',' + medkit.y + ')');
         } else {
-            console.log('no hk (' + this.heathkitPossibility + ' ; ' + rnd + ')');
+            console.log('no hk (' + this.heathkitPossibility + '% ; ' + rnd + ')');
         }
     }
 
@@ -235,13 +241,13 @@ BasicGame.Game.prototype.update = function () {
         var rnd = Math.random();
         if (this.ammukitPossibility / 100 >= rnd) {
             var ammukit = this.spawnAmmukit();
-            console.log('hk (' + this.ammukitPossibility + ' ; ' + rnd + ') at (' + ammukit.x + ',' + ammukit.y + ')');
+            console.log('ak (' + this.ammukitPossibility + '% ; ' + rnd + ') at (' + ammukit.x + ',' + ammukit.y + ')');
         } else {
-            console.log('no hk (' + this.ammukitPossibility + ' ; ' + rnd + ')');
+            console.log('no ak (' + this.ammukitPossibility + '% ; ' + rnd + ')');
         }
     }
 
-    if (this.player.x > this.level * 1200) {
+    if (this.player.x > this.level * 1600) {
         this.showMessage("Level UP", 1.5);
         this.playAudio('levelUp');
         this.level++;
@@ -284,7 +290,7 @@ BasicGame.Game.prototype.playerHit = function (player, enemy) {
 
             game.add.audio('gameLost').play();
 
-            this.showMessage("Congratz for NOT clearing the Game :(", 10);
+            this.showMessage("Congratz for NOT clearing the Game :(\n\nPress F5 to restart", 10);
 
             killedPlayer.anchor.setTo(0.5, 0.5);
             killedPlayer.animations.add('die', [
@@ -364,14 +370,14 @@ BasicGame.Game.prototype.loadZombies = function () {
             'run_left.png',
             'stay_left.png',
             'run_left.png'
-        ]);
+        ], 4);
 
         zombie.animations.add('run_right', [
             'stay_right.png',
             'run_right.png',
             'stay_right.png',
             'run_right.png'
-        ]);
+        ], 4);
     });
 };
 
@@ -497,8 +503,9 @@ BasicGame.Game.prototype.displayHUD = function () {
     this.hudBulletCounter = this.add.text(30, 52, '', {font: '20px monospace', fill: '#fff'});
     this.hudHealthText = this.add.text(30, 30, '', {font: '20px monospace', fill: '#fff'});
     this.hudLevel = this.add.text(660, 480, '', {font: '16px monospace', fill: '#fff'});
+    this.hudTime = this.add.text(320, 30, '', {font: '22px monospace', fill: '#fff', align: 'center'});
 
-    var keyText = this.add.text(this.camera.width - 120, 40, 'Shoot\t[Space]', {
+    var keyText = this.add.text(this.camera.width - 140, 40, 'Shoot\t[Space]', {
         font: '16px monospace',
         fill: '#fff',
         align: 'right'
@@ -509,6 +516,7 @@ BasicGame.Game.prototype.displayHUD = function () {
     this.hud.add(this.hudBulletCounter);
     this.hud.add(this.hudHealthText);
     this.hud.add(this.hudLevel);
+    this.hud.add(this.hudTime);
     this.hud.add(keyText);
 
     if (this.debugMode) {
@@ -535,6 +543,7 @@ BasicGame.Game.prototype.updateHUD = function () {
     this.hudBulletCounter.text = 'Bullets: ' + this.bullets;
     this.hudHealthText.text = 'Health: ' + this.playerHealth;
     this.hudLevel.text = 'Level: ' + this.level;
+    this.hudTime.text = 'Time: ' + this.time.now / 1000 + 's';
 
     if (this.debugMode) {
         this.hudZombieCounter.text = 'Zombies: ' + this.zombies.countLiving();
