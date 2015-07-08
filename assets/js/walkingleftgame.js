@@ -74,7 +74,7 @@ BasicGame.Game.prototype.preload = function () {
 
 };
 
-BasicGame.Game.prototype.playBackgroundMusic = function() {
+BasicGame.Game.prototype.playBackgroundMusic = function () {
     this.bgmusic.play('', 0, 1, true);
 };
 
@@ -165,17 +165,33 @@ BasicGame.Game.prototype.update = function () {
     if (this.cursors.left.isDown) {
         this.playerTurned = true;
         this.player.body.velocity.x = -playerBaseRunVelocity + playerBaseRunVelocity * (this.level / 100);
-        this.player.animations.play('walk_left');
+        if (this.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
+            this.player.animations.play('shoot_left');
+        } else {
+            this.player.animations.play('walk_left');
+        }
     }
     else if (this.cursors.right.isDown) {
         this.playerTurned = false;
         this.player.body.velocity.x = playerBaseRunVelocity + playerBaseRunVelocity * (this.level / 100);
-        this.player.animations.play('walk_right');
+
+        if (this.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
+            this.player.animations.play('shoot_right');
+        } else {
+            this.player.animations.play('walk_right');
+        }
     } else {
         this.player.animations.stop();
+
+        if (!this.cursors.right.isDown && !this.cursors.right.isDown && !this.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)
+        ) {
+            this.player.animations.play(
+                (this.playerTurned ? 'stay_left' : 'stay_right')
+            );
+        }
     }
 
-    this.zombies.forEach(function(zombie) {
+    this.zombies.forEach(function (zombie) {
         zombie.animations.play('run_left');
     });
 
@@ -218,7 +234,15 @@ BasicGame.Game.prototype.update = function () {
     }
 
     if (this.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
-        this.fire();
+        if (this.playerCanFire()) {
+            if (this.playerTurned) {
+                this.player.animations.play('shoot_left');
+            } else {
+                this.player.animations.play('shoot_right');
+            }
+
+            this.fire();
+        }
     }
 
     if (this.message.exists && this.time.now > this.messageExpire) {
@@ -235,9 +259,11 @@ BasicGame.Game.prototype.update = function () {
         var rnd = Math.random();
         if (this.heathkitPossibility / 100 >= rnd) {
             var medkit = this.spawnHealthkit();
-            console.log('hk (' + this.heathkitPossibility + '% ; ' + rnd + ') at (' + medkit.x + ',' + medkit.y + ')');
+            if (this.debugMode)
+                console.log('hk (' + this.heathkitPossibility + '% ; ' + rnd + ') at (' + medkit.x + ',' + medkit.y + ')');
         } else {
-            console.log('no hk (' + this.heathkitPossibility + '% ; ' + rnd + ')');
+            if (this.debugMode)
+                console.log('no hk (' + this.heathkitPossibility + '% ; ' + rnd + ')');
         }
     }
 
@@ -246,9 +272,11 @@ BasicGame.Game.prototype.update = function () {
         var rnd = Math.random();
         if (this.ammukitPossibility / 100 >= rnd) {
             var ammukit = this.spawnAmmukit();
-            console.log('ak (' + this.ammukitPossibility + '% ; ' + rnd + ') at (' + ammukit.x + ',' + ammukit.y + ')');
+            if (this.debugMode)
+                console.log('ak (' + this.ammukitPossibility + '% ; ' + rnd + ') at (' + ammukit.x + ',' + ammukit.y + ')');
         } else {
-            console.log('no ak (' + this.ammukitPossibility + '% ; ' + rnd + ')');
+            if (this.debugMode)
+                console.log('no ak (' + this.ammukitPossibility + '% ; ' + rnd + ')');
         }
     }
 
@@ -337,6 +365,27 @@ BasicGame.Game.prototype.loadPlayerAt = function (x, y) {
         "stay_left.png",
         "run_left_2.png"
     ], 10);
+
+    player.animations.add('shoot_right', [
+        "stay_right_shoot.png",
+        "run_right_shoot.png",
+        "stay_right_shoot.png",
+        "run_right_shoot.png"
+    ], 10);
+    player.animations.add('shoot_left', [
+        "stay_left_shoot.png",
+        "run_left_shoot.png",
+        "stay_left_shoot.png",
+        "run_left_shoot.png"
+    ], 10);
+
+    player.animations.add('stay_left', [
+        "stay_left.png"
+    ], 1);
+
+    player.animations.add('stay_right', [
+        "stay_right.png"
+    ], 1);
 
     this.game.physics.arcade.enable(player);
 
@@ -476,8 +525,12 @@ BasicGame.Game.prototype.generateRandomEnvElements = function () {
     }, this)
 };
 
+BasicGame.Game.prototype.playerCanFire = function () {
+    return this.player.alive && this.nextShotAt <= this.time.now;
+};
+
 BasicGame.Game.prototype.fire = function () {
-    if (!this.player.alive || this.nextShotAt > this.time.now) {
+    if (this.playerCanFire()) {
         return;
     }
 
