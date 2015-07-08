@@ -241,6 +241,7 @@ BasicGame.Game.prototype.update = function () {
     }
 
     if (this.player.x > this.level * 1200) {
+        this.showMessage("Level UP", 1.5);
         this.playAudio('levelUp');
         this.level++;
     }
