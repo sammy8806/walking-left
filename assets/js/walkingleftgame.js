@@ -1,6 +1,4 @@
 BasicGame.Game = function (game) {
-    var weapon = {};
-
     //  When a State is added to Phaser it automatically has the following properties set on it, even if they already exist:
 
     this.game;      //  a reference to the currently running game (Phaser.Game)
@@ -23,6 +21,7 @@ BasicGame.Game = function (game) {
     this.zombies = null;
     this.boxes = null;
     this.player = null;
+    this.playerGroup = null;
     this.platforms = null;
 
     this.level = 1;
@@ -40,10 +39,18 @@ BasicGame.Game = function (game) {
     this.playerTurned = false;
 
     this.nextZombieAt = 0;
-    this.zombieDelay = 3000;
+    this.zombieDelay = 3000; // in msec
+
+    this.nextHealthkitAt = 0;
+    this.healthkitDelay = 6000; // in msec
+    this.heathkitPossibility = 20; // in percent
+    this.medkits = null;
 
     this.hudZombieCounter = null;
+
+    this.gun = null;
 };
+
 //
 //BasicGame.Game.weapon = function() {
 //    this.gun = function() {
@@ -56,24 +63,30 @@ BasicGame.Game.prototype.preload = function () {
 };
 
 BasicGame.Game.prototype.create = function () {
+    this.time.advancedTiming = true;
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
     this.platforms = game.add.group();
     this.platforms.enableBody = true;
+
+    this.playerGroup = game.add.group();
+    this.playerGroup.enableBody = true;
 
     // var background = game.add.tileSprite(0, 0, this.game.width, game.world.height - 50, 'ground');
 
     for (var i = 0; i < Math.ceil(game.world.width / 50); i++) {
         ground = this.platforms.create(i * 50, game.world.height - 50, 'ground');
         ground.body.immovable = true;
-}
+    }
 
     this.loadPlayer();
     this.loadZombies();
+    this.loadHealthkits();
 
     this.boxes = game.add.group();
     this.boxes.enableBody = true;
-    this.generateBox(100, game.world.height - 100);
+    this.boxes.physicsBodyType = Phaser.Physics.ARCADE;
+    this.generateRandomEnvElements();
 
     this.bulletPool = this.add.group();
     this.bulletPool.enableBody = true;
@@ -100,13 +113,16 @@ BasicGame.Game.prototype.render = function () {
 };
 
 BasicGame.Game.prototype.update = function () {
-    this.game.physics.arcade.collide(this.boxes, this.platforms);
+    this.game.physics.arcade.collide(this.medkits, this.boxes);
+    this.game.physics.arcade.collide(this.medkits, this.platforms);
 
     this.game.physics.arcade.collide(this.player, this.platforms);
     this.game.physics.arcade.collide(this.player, this.boxes);
 
     this.game.physics.arcade.collide(this.zombies, this.platforms);
     this.game.physics.arcade.collide(this.zombies, this.boxes);
+
+    this.game.physics.arcade.collide(this.boxes, this.platforms);
 
     this.cursors = game.input.keyboard.createCursorKeys();
 
@@ -141,12 +157,20 @@ BasicGame.Game.prototype.update = function () {
         this.player, this.zombies, this.playerHit, null, this
     );
 
+    this.physics.arcade.overlap(
+        this.player, this.medkits, this.playerHealthkit, null, this
+    );
+
     if (this.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
         this.fire();
     }
 
     if (this.input.keyboard.isDown(Phaser.Keyboard.Z)) {
         this.spawnZombie();
+    }
+
+    if (this.input.keyboard.isDown(Phaser.Keyboard.M)) {
+        this.spawnHealthkit();
     }
 
     if (this.input.keyboard.isDown(Phaser.Keyboard.L)) {
@@ -162,29 +186,43 @@ BasicGame.Game.prototype.update = function () {
         this.spawnZombie();
     }
 
-    this.updateHUD();
+    if (this.nextHealthkitAt < this.time.now && this.zombies.countDead() > 0) {
+        this.nextHealthkitAt = this.time.now + this.healthkitDelay;
+        var rnd = Math.random();
+        if (this.heathkitPossibility / 100 >= rnd) {
+            var medkit = this.spawnHealthkit();
+            console.log('hk (' + this.heathkitPossibility + ' ; ' + rnd + ') at (' + medkit.x + ',' + medkit.y + ')');
+        } else {
+            console.log('no hk (' + this.heathkitPossibility + ' ; ' + rnd + ')');
+        }
+    }
 
+    this.updateHUD();
 };
 
 BasicGame.Game.prototype.quitGame = function () {
     this.state.start('MainMenu');
 };
 
-BasicGame.Game.prototype.playerHit = function(player, enemy) {
-    if(player.alive) {
+BasicGame.Game.prototype.playerHealthkit = function (player, healthkit) {
+    this.playerHealth += 40;
+    healthkit.kill();
+};
+
+BasicGame.Game.prototype.playerHit = function (player, enemy) {
+    if (player.alive) {
         this.playerHealth -= 15;
         player.body.velocity.x = -800;
 
-        if(this.playerHealth <= 0) {
+        if (this.playerHealth <= 0) {
             var killedPlayer = this.add.sprite(player.x, player.y, 'player');
             player.kill();
             killedPlayer.anchor.setTo(0.5, 0.5);
             killedPlayer.animations.add('die', [
                 "dying_1.png",
-                "dying_2.png",
                 "dying_2.png"
-            ], 10);
-            killedPlayer.play('die', 15);
+            ], 2);
+            killedPlayer.play('die', 2);
         }
     }
 };
@@ -195,32 +233,45 @@ BasicGame.Game.prototype.zombieHitWithGun = function (bullet, enemy) {
 };
 
 BasicGame.Game.prototype.loadPlayer = function () {
-    //  This sprite is using a texture atlas for all of its animation data
-    this.player = this.game.add.sprite(32, game.world.height - 150, 'player', 'stay_right.png');
-    //player.scale.setTo(2, 2);
+    //return this.loadPlayerAt(32, game.world.height - 150);
+    return this.loadPlayerWithGunAt(32, game.world.height - 150);
+};
 
-    // add animation phases
-    this.player.animations.add('walk_right', [
+BasicGame.Game.prototype.loadPlayerAt = function (x, y) {
+    var player = this.game.add.sprite(x, y, 'player', 'stay_right.png');
+
+    player.animations.add('walk_right', [
         "stay_right.png",
         "run_right_1.png",
         "stay_right.png",
         "run_right_2.png"
     ], 10);
-    this.player.animations.add('walk_left', [
+    player.animations.add('walk_left', [
         "stay_left.png",
         "run_left_1.png",
         "stay_left.png",
         "run_left_2.png"
     ], 10);
 
-    this.game.physics.arcade.enable(this.player);
+    this.game.physics.arcade.enable(player);
 
-    this.player.body.bounce.y = 0.15;
-    this.player.body.gravity.y = 600;
-    this.player.body.collideWorldBounds = true;
-    this.player.anchor.setTo(0.5, 0.5);
+    player.body.bounce.y = 0.15;
+    player.body.gravity.y = 600;
+    player.body.collideWorldBounds = true;
+    player.anchor.setTo(0.5, 0.5);
 
-    return this.player;
+    return player;
+};
+
+BasicGame.Game.prototype.loadPlayerWithGunAt = function (x, y) {
+    var player = this.loadPlayerAt(0, 0);
+    this.player = player;
+    this.playerGroup.add(player);
+
+    var gun = this.game.add.sprite(0, 0, 'gun');
+    this.playerGroup.add(gun);
+
+    return player;
 };
 
 BasicGame.Game.prototype.loadZombies = function () {
@@ -236,7 +287,7 @@ BasicGame.Game.prototype.loadZombies = function () {
     this.zombies.forEach(function (zombie) {
         zombie.animations.add('run_left', [
             'stay_left.png',
-            'run_left.png'  ,
+            'run_left.png',
             'stay_left.png',
             'run_left.png'
         ]);
@@ -251,34 +302,69 @@ BasicGame.Game.prototype.loadZombies = function () {
 };
 
 BasicGame.Game.prototype.spawnZombie = function () {
-        var zombie = this.zombies.getFirstExists(false);
-        if(zombie == undefined)
-            return;
+    var zombie = this.zombies.getFirstExists(false);
+    if (zombie == undefined)
+        return;
 
-        zombie.reset(
-            //this.player.x + Math.random() * (game.world.width - this.player.x),
-            //this.player.x + Math.random() * (this.player.x),
-            this.rnd.integerInRange(this.player.x + 20, this.player.x + 600),
-            //Math.random() * game.world.height - this.player.y
-            505
-        );
-        zombie.play('run_left');
-        zombie.body.bounce.y = 0.2;
-        zombie.body.gravity.y = 30;
-        zombie.body.velocity.x = this.level * -3 + -15;
+    zombie.reset(
+        this.rnd.integerInRange(this.player.x + 20, this.player.x + 600),
+        0
+    );
+    zombie.play('run_left');
+    zombie.body.bounce.y = 0.2;
+    zombie.body.gravity.y = 600;
+    zombie.body.velocity.x = this.level * -3 + -15;
 };
 
-BasicGame.Game.prototype.generateBox = function (x, y) {
-    var box = this.boxes.create(x, y, 'box');
-    box.enableBody = true;
 
-    this.game.physics.enable(box, Phaser.Physics.ARCADE);
-    box.body.collideWorldBounds = true;
-    box.body.immovable = true;
+BasicGame.Game.prototype.loadHealthkits = function () {
+    this.medkits = this.add.group();
+    this.medkits.enableBody = true;
+    this.medkits.physicsBodyType = Phaser.Physics.ARCADE;
+    this.medkits.createMultiple(100, 'medkit');
+    this.medkits.setAll('anchor.x', 0.5);
+    this.medkits.setAll('anchor.y', 0.5);
+    this.medkits.setAll('outOfBoundsKill', false);
+    this.medkits.setAll('checkWorldBounds', true);
+};
 
-    box.body.gravity.y = 0;
+BasicGame.Game.prototype.spawnHealthkit = function () {
+    var medkit = this.medkits.getFirstExists(false);
+    if (medkit == undefined)
+        return;
 
-    return box;
+    medkit.reset(
+        this.rnd.integerInRange(this.player.x + 20, this.player.x + 600),
+        0
+    );
+    medkit.play('run_left');
+    medkit.body.bounce.y = 0.2;
+    medkit.body.gravity.y = 400;
+
+    return medkit;
+};
+
+BasicGame.Game.prototype.generateRandomEnvElements = function () {
+    var countBoxes = this.rnd.integerInRange(5, 80);
+    var countBarrels = this.rnd.integerInRange(5, 80);
+
+    this.boxes.createMultiple(countBoxes, 'box');
+    this.boxes.createMultiple(countBarrels, 'barrel');
+    this.boxes.setAll('anchor.x', 0.5);
+    this.boxes.setAll('anchor.y', 1);
+    this.boxes.setAll('body.immovable', true);
+    this.boxes.setAll('outOfBoundsKill', false);
+    this.boxes.setAll('checkWorldBounds', true);
+
+    console.log({barr: countBarrels, box: countBoxes, sum: this.boxes.countDead()});
+
+    this.boxes.forEach(function (box) {
+        box.reset(
+            this.rnd.integerInRange(0, this.world.width),
+            //this.rnd.integerInRange(300, this.world.height - 50)
+            this.world.height - 49
+        );
+    }, this)
 };
 
 BasicGame.Game.prototype.fire = function () {
@@ -290,13 +376,12 @@ BasicGame.Game.prototype.fire = function () {
         return;
     }
 
-    if(this.bullets > 0)
+    if (this.bullets > 0)
         this.bullets--;
     else
         return;
 
     this.nextShotAt = this.time.now + (1000 * 60 / this.bulletFireRate);
-    console.log({now: this.time.now, next: this.nextShotAt});
 
     var bullet = this.bulletPool.getFirstExists(false);
     bullet.reset(this.player.x + (this.playerTurned ? -1 : 1) * 15, this.player.y);
@@ -308,21 +393,30 @@ BasicGame.Game.prototype.fire = function () {
 BasicGame.Game.prototype.displayHUD = function () {
     this.hud = this.add.group();
 
-    this.hudZombieCounter = this.add.text(660,500, '', {font: '16px monospace', fill: '#fff'});
+    this.hudZombieCounter = this.add.text(660, 500, '', {font: '16px monospace', fill: '#fff'});
     this.hudZombieCounter.fixedToCamera = true;
-    this.hudBulletCounter = this.add.text(660,520, '', {font: '16px monospace', fill: '#fff'});
+    this.hudBulletCounter = this.add.text(660, 520, '', {font: '16px monospace', fill: '#fff'});
     this.hudBulletCounter.fixedToCamera = true;
 
-    this.hudHealthText = this.add.text(660,540, '', {font: '16px monospace', fill: '#fff'});
+    this.hudHealthText = this.add.text(660, 540, '', {font: '16px monospace', fill: '#fff'});
     this.hudHealthText.fixedToCamera = true;
+
+    this.hudLevel = this.add.text(660, 480, '', {font: '16px monospace', fill: '#fff'});
+    this.hudLevel.fixedToCamera = true;
+
+    this.hudFpsCounter = this.add.text(20, 20, '', {font: '16px monospace', fill: '#fff'});
+    this.hudFpsCounter.fixedToCamera = true;
 
     this.hud.add(this.hudZombieCounter);
 };
 
 BasicGame.Game.prototype.updateHUD = function () {
-    this.hudZombieCounter.text = 'Zombies: ' +  this.zombies.countLiving();
+    this.hudZombieCounter.text = 'Zombies: ' + this.zombies.countLiving();
     this.hudBulletCounter.text = 'Bullets: ' + this.bullets;
     this.hudHealthText.text = 'Health: ' + this.playerHealth;
+    this.hudLevel.text = 'Level: ' + this.level;
+
+    this.hudFpsCounter.text = "FPS: " + this.game.time.fps;
 };
 
 BasicGame.Game.prototype.displayEntryMessage = function () {
