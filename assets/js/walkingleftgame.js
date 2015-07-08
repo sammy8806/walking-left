@@ -25,10 +25,11 @@ BasicGame.Game = function (game) {
     this.platforms = null;
 
     this.level = 1;
-    this.playerBullets = 30;
+    this.playerBullets = 20; // Get this at spawn
     this.playerHealth = 100;
 
     this.bulletFireRateBase = 60 * 2; // shots per 60 seconds
+    this.debugMode = false;
 
     // Internals
     this.nextShotAt = 0;
@@ -45,6 +46,11 @@ BasicGame.Game = function (game) {
     this.healthkitDelay = 6000; // in msec
     this.heathkitPossibility = 20; // in percent
     this.medkits = null;
+
+    this.nextAmmukitAt = 0;
+    this.ammukitDelay = 6000; // in msec
+    this.ammukitPossibility = 40; // in percent
+    this.ammukits = null;
 
     this.hudZombieCounter = null;
     this.hudHealthbar = null;
@@ -73,22 +79,25 @@ BasicGame.Game.prototype.create = function () {
     this.time.advancedTiming = true;
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
+    var background = game.add.tileSprite(0, -50, this.game.world.width, this.game.world.height, 'sky');
+
     this.platforms = game.add.group();
     this.platforms.enableBody = true;
 
     this.playerGroup = game.add.group();
     this.playerGroup.enableBody = true;
 
-    // var background = game.add.tileSprite(0, 0, this.game.width, game.world.height - 50, 'ground');
-
     for (var i = 0; i < Math.ceil(game.world.width / 50); i++) {
         ground = this.platforms.create(i * 50, game.world.height - 50, 'ground');
         ground.body.immovable = true;
     }
 
+    this.bullets = this.playerBullets;
+
     this.loadPlayer();
     this.loadZombies();
     this.loadHealthkits();
+    this.loadAmmukits();
 
     this.boxes = game.add.group();
     this.boxes.enableBody = true;
@@ -105,7 +114,7 @@ BasicGame.Game.prototype.create = function () {
     this.bulletPool.setAll('checkWorldBounds', true);
 
     this.game.camera.follow(this.player);
-    this.game.camera.deadzone = new Phaser.Rectangle(150, 150, 500, 300);
+    this.game.camera.deadzone = new Phaser.Rectangle(150, 150, 390, 300);
     this.game.camera.focusOnXY(0, 0);
 
     this.displayHUD();
@@ -125,11 +134,15 @@ BasicGame.Game.prototype.update = function () {
     this.game.physics.arcade.collide(this.medkits, this.boxes);
     this.game.physics.arcade.collide(this.medkits, this.platforms);
 
+    this.game.physics.arcade.collide(this.ammukits, this.boxes);
+    this.game.physics.arcade.collide(this.ammukits, this.platforms);
+
     this.game.physics.arcade.collide(this.player, this.platforms);
     this.game.physics.arcade.collide(this.player, this.boxes);
 
     this.game.physics.arcade.collide(this.zombies, this.platforms);
     this.game.physics.arcade.collide(this.zombies, this.boxes);
+    this.game.physics.arcade.collide(this.zombies, this.zombies);
 
     this.game.physics.arcade.collide(this.boxes, this.platforms);
 
@@ -157,7 +170,8 @@ BasicGame.Game.prototype.update = function () {
     //  Allow the player to jump if they are touching the ground.
     if (this.cursors.up.isDown && this.player.body.touching.down) {
         this.player.body.velocity.y = -playerBaseJumpVelocity;
-        this.playAudio('jump');
+        var audio = this.playAudio('jump');
+        audio.volume = 0.8;
     }
 
     this.physics.arcade.overlap(
@@ -171,24 +185,24 @@ BasicGame.Game.prototype.update = function () {
         this.player, this.medkits, this.playerHealthkit, null, this
     );
 
-    if (this.input.keyboard.isDown(Phaser.Keyboard.Z)) {
+    this.physics.arcade.overlap(
+        this.player, this.ammukits, this.playerAmmukit, null, this
+    );
+
+    if (this.input.keyboard.isDown(Phaser.Keyboard.Z) && this.debugMode) {
         this.spawnZombie();
     }
 
-    if (this.input.keyboard.isDown(Phaser.Keyboard.M)) {
+    if (this.input.keyboard.isDown(Phaser.Keyboard.M) && this.debugMode) {
         this.spawnHealthkit();
     }
 
-    if (this.input.keyboard.isDown(Phaser.Keyboard.L)) {
+    if (this.input.keyboard.isDown(Phaser.Keyboard.A) && this.debugMode) {
+        this.spawnAmmukit();
+    }
+
+    if (this.input.keyboard.isDown(Phaser.Keyboard.L) && this.debugMode) {
         this.level++;
-    }
-
-    if (this.input.keyboard.isDown(Phaser.Keyboard.R)) {
-        this.bullets = 15;
-    }
-
-    if (this.input.keyboard.isDown(Phaser.Keyboard.R)) {
-        this.bullets = 15;
     }
 
     if (this.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
@@ -204,7 +218,7 @@ BasicGame.Game.prototype.update = function () {
         this.spawnZombie();
     }
 
-    if (this.nextHealthkitAt < this.time.now && this.zombies.countDead() > 0) {
+    if (this.nextHealthkitAt < this.time.now && this.medkits.countDead() > 0) {
         this.nextHealthkitAt = this.time.now + this.healthkitDelay;
         var rnd = Math.random();
         if (this.heathkitPossibility / 100 >= rnd) {
@@ -212,6 +226,17 @@ BasicGame.Game.prototype.update = function () {
             console.log('hk (' + this.heathkitPossibility + ' ; ' + rnd + ') at (' + medkit.x + ',' + medkit.y + ')');
         } else {
             console.log('no hk (' + this.heathkitPossibility + ' ; ' + rnd + ')');
+        }
+    }
+
+    if (this.nextAmmukitAt < this.time.now && this.ammukits.countDead() > 0) {
+        this.nextAmmukitAt = this.time.now + this.ammukitDelay;
+        var rnd = Math.random();
+        if (this.ammukitPossibility / 100 >= rnd) {
+            var ammukit = this.spawnAmmukit();
+            console.log('hk (' + this.ammukitPossibility + ' ; ' + rnd + ') at (' + ammukit.x + ',' + ammukit.y + ')');
+        } else {
+            console.log('no hk (' + this.ammukitPossibility + ' ; ' + rnd + ')');
         }
     }
 
@@ -239,10 +264,16 @@ BasicGame.Game.prototype.playerHealthkit = function (player, healthkit) {
     this.playAudio('pickup');
 };
 
+BasicGame.Game.prototype.playerAmmukit = function (player, ammukit) {
+    this.bullets += 10 + (3 * this.level);
+    ammukit.kill();
+    this.playAudio('pickup');
+};
+
 BasicGame.Game.prototype.playerHit = function (player, enemy) {
     if (player.alive) {
         this.playerHealth -= 15;
-        player.body.velocity.x = -800;
+        player.body.velocity.x = -1400;
 
         if (this.playerHealth <= 0) {
             var killedPlayer = this.add.sprite(player.x, player.y, 'player');
@@ -368,6 +399,17 @@ BasicGame.Game.prototype.loadHealthkits = function () {
     this.medkits.setAll('checkWorldBounds', true);
 };
 
+BasicGame.Game.prototype.loadAmmukits = function () {
+    this.ammukits = this.add.group();
+    this.ammukits.enableBody = true;
+    this.ammukits.physicsBodyType = Phaser.Physics.ARCADE;
+    this.ammukits.createMultiple(100, 'gun_icon');
+    this.ammukits.setAll('anchor.x', 0.5);
+    this.ammukits.setAll('anchor.y', 0.5);
+    this.ammukits.setAll('outOfBoundsKill', false);
+    this.ammukits.setAll('checkWorldBounds', true);
+};
+
 BasicGame.Game.prototype.spawnHealthkit = function () {
     var medkit = this.medkits.getFirstExists(false);
     if (medkit == undefined)
@@ -377,11 +419,25 @@ BasicGame.Game.prototype.spawnHealthkit = function () {
         this.rnd.integerInRange(this.player.x + 20, this.player.x + 600),
         0
     );
-    medkit.play('run_left');
     medkit.body.bounce.y = 0.2;
     medkit.body.gravity.y = 400;
 
     return medkit;
+};
+
+BasicGame.Game.prototype.spawnAmmukit = function () {
+    var ammukit = this.ammukits.getFirstExists(false);
+    if (ammukit == undefined)
+        return;
+
+    ammukit.reset(
+        this.rnd.integerInRange(this.player.x + 20, this.player.x + 600),
+        0
+    );
+    ammukit.body.bounce.y = 0.2;
+    ammukit.body.gravity.y = 400;
+
+    return ammukit;
 };
 
 BasicGame.Game.prototype.generateRandomEnvElements = function () {
@@ -436,16 +492,11 @@ BasicGame.Game.prototype.displayHUD = function () {
     this.hud = this.add.group();
     this.hud.fixedToCamera = true;
 
-    this.hudZombieCounter = this.add.text(660, 500, '', {font: '16px monospace', fill: '#fff'});
     this.hudBulletCounter = this.add.text(30, 52, '', {font: '20px monospace', fill: '#fff'});
     this.hudHealthText = this.add.text(30, 30, '', {font: '20px monospace', fill: '#fff'});
     this.hudLevel = this.add.text(660, 480, '', {font: '16px monospace', fill: '#fff'});
-    this.hudFpsCounter = this.add.text(this.camera.width - 80, 20, '', {
-        font: '16px monospace',
-        fill: '#fff',
-        align: 'right'
-    });
-    var keyText = this.add.text(this.camera.width - 120, 40, 'Reload\t[R]\nJump\t[Space]', {
+
+    var keyText = this.add.text(this.camera.width - 120, 40, 'Jump\t[Space]', {
         font: '16px monospace',
         fill: '#fff',
         align: 'right'
@@ -453,30 +504,48 @@ BasicGame.Game.prototype.displayHUD = function () {
 
     this.hudHealthbar = this.add.group();
     this.hud.add(this.hudHealthbar);
-    this.hud.add(this.hudZombieCounter);
     this.hud.add(this.hudBulletCounter);
     this.hud.add(this.hudHealthText);
     this.hud.add(this.hudLevel);
-    this.hud.add(this.hudFpsCounter);
     this.hud.add(keyText);
+
+    if (this.debugMode) {
+        this.hudZombieCounter = this.add.text(660, 500, '', {font: '16px monospace', fill: '#fff'});
+        this.hudFpsCounter = this.add.text(this.camera.width - 80, 20, '', {
+            font: '16px monospace',
+            fill: '#fff',
+            align: 'right'
+        });
+        this.hudDebugText = this.add.text(this.camera.width - 120, 100, 'MedKit\t[M]\nAmmu\t[A]\nZombie\t[T]\nLevel\t[L]', {
+            font: '16px monospace',
+            fill: '#fff',
+            align: 'right'
+        });
+
+        this.hud.add(this.hudZombieCounter);
+        this.hud.add(this.hudFpsCounter);
+        this.hud.add(this.hudDebugText);
+    }
 };
 
 BasicGame.Game.prototype.updateHUD = function () {
-    this.hudZombieCounter.text = 'Zombies: ' + this.zombies.countLiving();
+
     this.hudBulletCounter.text = 'Bullets: ' + this.bullets;
     this.hudHealthText.text = 'Health: ' + this.playerHealth;
     this.hudLevel.text = 'Level: ' + this.level;
 
-    this.hudFpsCounter.text = "FPS: " + this.game.time.fps;
+    if (this.debugMode) {
+        this.hudZombieCounter.text = 'Zombies: ' + this.zombies.countLiving();
+        this.hudFpsCounter.text = "FPS: " + this.game.time.fps;
+    }
 
+    // TODO: Performance Killer
     //this.hudHealthbar = this.add.group();
-    //for (var i = 0; i <= 100; i++) {
-    //    var g = game.add.graphics(25, 7);
-    //    g.beginFill(0xff0000);
-    //    g.drawRect(i, 0, 1.5, 22);
-    //    g.endFill();
-    //    this.hudHealthbar.addChild(g);
-    //}
+    //var g = game.add.graphics(25, 7);
+    //g.beginFill(0xff0000);
+    //g.drawRect(0, 0, 120, 22);
+    //g.endFill();
+    //this.hudHealthbar.addChild(g);
     //
     //this.hudHealthbar.create(0, 0, 'healthbar');
     //this.hudHealthbarContent = game.add.group();

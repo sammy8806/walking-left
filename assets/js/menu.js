@@ -14,7 +14,7 @@ BasicGame.MainMenu.prototype.create = function () {
     var tw1 = game.add.tween(this.ground);
     tw1.to({alpha: 1.0}, 1000, "Linear", true);
 
-    var t = game.add.text(250, 150, 'The Walking XXX');
+    var t = game.add.text(250, 150, 'THERE IS NO EXIT');
     t.anchor.set(0);
     t.font = 'Arial';
     t.fontWeight = 'bold';

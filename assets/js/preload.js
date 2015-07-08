@@ -33,7 +33,7 @@ BasicGame.Preloader.prototype.preload = function() {
     game.load.atlasJSONHash('zombie', 'assets/img/zombie.png', 'assets/img/zombie.json');
 
     game.load.image('ground', 'assets/img/street.png');
-    game.load.image('sky', 'assets/img/sky.png');
+    game.load.image('sky', 'assets/img/Env_SkyNew.png');
 
     game.load.image('box', 'assets/sprites/objects/box.png');
     game.load.image('barrel', 'assets/sprites/objects/barrel.png');
@@ -44,13 +44,6 @@ BasicGame.Preloader.prototype.preload = function() {
     game.load.image('sword', 'assets/sprites/objects/sword.png');
     game.load.image('healthbar', 'assets/sprites/objects/healthbar.png');
 
-    //game.load.audio('drums', 'assets/drums2.mp3');
-    //game.load.audio('kick', 'assets/kick.wav');
-    //game.load.audio('snare', 'assets/snare.wav');
-    //game.load.audio('splash', 'assets/splash.wav');
-    //game.load.audio('crash', 'assets/crash2.wav');
-    //game.load.audio('bgmusic', ['assets/wind2.mp3']);
-
     game.load.audio('playerHit', 'assets/sounds/Hit_Hurt30.wav');
     game.load.audio('jump', 'assets/sounds/Jump8.wav');
     game.load.audio('pickup', 'assets/sounds/Pickup_Coin6.wav');
@@ -58,7 +51,6 @@ BasicGame.Preloader.prototype.preload = function() {
     game.load.audio('gameLost', 'assets/sounds/Randomize113.wav');
     game.load.audio('shoot', 'assets/sounds/Randomize132.wav');
     game.load.audio('bg', ['assets/sounds/bodenstaendig_2000_in_rock_4bit.ogg']);
-    //game.load.audio('', 'assets/sounds/');
 };
 
 function fileComplete() {
