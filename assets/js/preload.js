@@ -47,9 +47,9 @@ BasicGame.Preloader.prototype.preload = function() {
     game.load.audio('playerHit', 'assets/sounds/Hit_Hurt30.wav');
     game.load.audio('jump', 'assets/sounds/Jump8.wav');
     game.load.audio('pickup', 'assets/sounds/Pickup_Coin6.wav');
-    game.load.audio('levelUp', 'assets/sounds/Powerup8.wav');
-    game.load.audio('gameLost', 'assets/sounds/Randomize113.wav');
-    game.load.audio('shoot', 'assets/sounds/Randomize132.wav');
+    game.load.audio('levelUp', 'assets/sounds/Powerup.wav');
+    game.load.audio('gameLost', 'assets/sounds/Death.wav');
+    game.load.audio('shoot', 'assets/sounds/Fireball.wav');
     game.load.audio('bg', ['assets/sounds/bodenstaendig_2000_in_rock_4bit.ogg']);
 };
 

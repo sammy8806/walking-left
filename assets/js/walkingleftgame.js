@@ -74,6 +74,7 @@ BasicGame.Game.prototype.preload = function () {
 
 BasicGame.Game.prototype.create = function () {
     this.bgmusic = game.add.audio('bg');
+    this.bgmusic.volume = 0.8;
     this.bgmusic.play();
 
     this.time.advancedTiming = true;
@@ -279,7 +280,7 @@ BasicGame.Game.prototype.playerHit = function (player, enemy) {
         if (this.playerHealth <= 0) {
             var killedPlayer = this.add.sprite(player.x, player.y, 'player');
             player.kill();
-            this.bgmusic.stop();
+            this.bgmusic.fadeOut(200);
 
             game.add.audio('gameLost').play();
 
