@@ -56,6 +56,7 @@ BasicGame.Preloader.prototype.preload = function() {
     game.load.audio('pickup', 'assets/sounds/Pickup_Coin6.wav');
     game.load.audio('levelUp', 'assets/sounds/Powerup8.wav');
     game.load.audio('gameLost', 'assets/sounds/Randomize113.wav');
+    game.load.audio('shoot', 'assets/sounds/Randomize132.wav');
     game.load.audio('bg', ['assets/sounds/bodenstaendig_2000_in_rock_4bit.ogg']);
     //game.load.audio('', 'assets/sounds/');
 };

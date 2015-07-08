@@ -416,8 +416,10 @@ BasicGame.Game.prototype.fire = function () {
         return;
     }
 
-    if (this.bullets > 0)
+    if (this.bullets > 0) {
         this.bullets--;
+        this.playAudio("shoot");
+    }
     else
         return;
 
